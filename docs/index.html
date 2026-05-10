@@ -978,12 +978,12 @@
 
   <h1>
     IDs that know<br>where they <span class="accent">live.</span>
-    <span class="id-preview" id="heroId">C0FFEE1D-E3-4f2a-9b1c-d3e8f7a2c501</span>
+    <span class="id-preview" id="heroId">C0FFEE1D-E3a4-4f2a-b9c7-0a8e65f21034</span>
   </h1>
 
   <p class="hero-sub">
-    A dead-simple standard for prefixed UUIDs. One glance tells you the environment,
-    the resource, and that it's valid. Never route test data to production again.
+    A simple standard for environment aware UUIDs. One glance tells you the environment
+    and that it's valid. Never route test data to production again.
   </p>
 
   <!-- INSTALL -->
@@ -1019,8 +1019,6 @@
         <option value="E1">E1</option>
         <option value="E2">E2</option>
         <option value="E3">E3</option>
-        <option value="dev">dev</option>
-        <option value="ci">ci</option>
       </select>
 
       <input class="demo-input" id="demoResource" placeholder="resource (user, order...)" maxlength="20" />
@@ -1073,7 +1071,7 @@
 <span class="code-comment">// Environment is explicit, always</span>
 <span class="code-keyword">SELECT</span> * <span class="code-keyword">FROM</span> orders
   <span class="code-keyword">WHERE</span> user_id <span class="code-keyword">LIKE</span>
-    <span class="code-good-id">'C0FFEE1D-<span class="code-env">E3</span>-%'</span>
+    <span class="code-good-id">'C0FFEE1D-<span class="code-env">E3</span>a4-%'</span>
 
 <span class="code-comment">// ✓ Unambiguous. Self-documenting.
 //   Works in any SQL, any log,
@@ -1111,7 +1109,7 @@
       </div>
       <div class="spec-label">
         <div class="spec-label-name">Optional Env Segment</div>
-        <div class="spec-label-desc">Insert an env slug (E3, E1, E2) between prefix and UUID for full environment scoping. Rejected at parse time if invalid.</div>
+        <div class="spec-label-desc">Insert an env slug (E3, E1, E2) followed by 2 random hex chars between prefix and UUID for full environment scoping — e.g. <span style="color:var(--accent);font-family:var(--mono)">E3a4</span>. Rejected at parse time if invalid.</div>
       </div>
     </div>
   </div>
@@ -1153,12 +1151,12 @@
         <span class="t-prompt">$</span>
         <span class="t-cmd">cofeid --env E3</span>
       </div>
-      <span class="t-out accent">C0FFEE1D-E3-4a1b-9c2d-e5f678901234</span>
+      <span class="t-out accent">C0FFEE1D-E3a4-4a1b-9c2d-e5f678901234</span>
       <div class="t-blank"></div>
       <span class="t-comment"># Validate an existing ID</span>
       <div class="t-line">
         <span class="t-prompt">$</span>
-        <span class="t-cmd">cofeid C0FFEE1D-E1-4b2c-ad3e-...</span>
+        <span class="t-cmd">cofeid C0FFEE1D-E1b2-4b2c-ad3e-...</span>
       </div>
       <span class="t-out success">✓ Valid cofeid [env: E1]</span>
       <div class="t-blank"></div>
@@ -1195,11 +1193,11 @@
       <div class="code-block">
 <span class="code-comment">-- Filter only production data</span>
 <span class="code-keyword">SELECT</span> * <span class="code-keyword">FROM</span> users
-  <span class="code-keyword">WHERE</span> id <span class="code-keyword">LIKE</span> <span class="code-string">'C0FFEE1D-E3-%'</span>;
+  <span class="code-keyword">WHERE</span> id <span class="code-keyword">LIKE</span> <span class="code-string">'C0FFEE1D-E3%-%'</span>;
 
 <span class="code-comment">-- Audit: anything that's not E3 is E1/E2</span>
 <span class="code-keyword">SELECT</span> id, created_at <span class="code-keyword">FROM</span> payments
-  <span class="code-keyword">WHERE</span> id <span class="code-keyword">NOT LIKE</span> <span class="code-string">'C0FFEE1D-E3-%'</span>
+  <span class="code-keyword">WHERE</span> id <span class="code-keyword">NOT LIKE</span> <span class="code-string">'C0FFEE1D-E3%-%'</span>
   <span class="code-keyword">AND</span> environment = <span class="code-string">'production'</span>;
 <span class="code-comment">-- ↑ This query should always return 0 rows.</span></div>
     </div>
@@ -1210,7 +1208,7 @@
 
 <span class="code-comment">// Generate a production ID</span>
 <span class="code-keyword">const</span> userId = generate({ env: <span class="code-string">'E3'</span> });
-<span class="code-comment">// → 'C0FFEE1D-E3-4f2a-9b1c-d3e8f7a2c501'</span>
+<span class="code-comment">// → 'C0FFEE1D-E3a4-4f2a-b9c7-0a8e65f21034'</span>
 
 <span class="code-comment">// Validate at API boundaries</span>
 <span class="code-keyword">function</span> getUser(id) {
@@ -1226,13 +1224,13 @@
 
 <span class="code-comment"># Generate a test ID</span>
 user_id = generate(env=<span class="code-string">"E1"</span>)
-<span class="code-comment"># → 'C0FFEE1D-E1-4a1b-9c2d-e5f678901234'</span>
+<span class="code-comment"># → 'C0FFEE1D-E1b2-4a1b-9c2d-e5f678901234'</span>
 
 <span class="code-comment"># Validate in your service layer</span>
 result = validate(user_id, env=<span class="code-string">"E3"</span>)
 <span class="code-keyword">if not</span> result[<span class="code-string">"valid"</span>]:
     <span class="code-keyword">raise</span> ValueError(result[<span class="code-string">"error"</span>])
-<span class="code-comment"># ✕ env mismatch: expected prod, got test</span></div>
+<span class="code-comment"># ✕ env mismatch: expected E3, got E1</span></div>
     </div>
 
     <div class="sql-panel" id="tab-grep">
@@ -1245,7 +1243,7 @@ $ grep <span class="code-string">'C0FFEE1D-E1'</span> /var/log/E3/app.log
 <span class="code-comment"># ↑ Should be empty. Alert if not.</span>
 
 <span class="code-comment"># Count IDs by environment</span>
-$ grep -oE <span class="code-string">'C0FFEE1D-[a-z]+'</span> app.log \
+$ grep -oE <span class="code-string">'C0FFEE1D-[A-Za-z0-9]+'</span> app.log \
   | sort | uniq -c | sort -rn</div>
     </div>
   </div>
@@ -1367,10 +1365,17 @@ $ grep -oE <span class="code-string">'C0FFEE1D-[a-z]+'</span> app.log \
     });
   }
 
+  function randHex(n) {
+    return Array.from({length: n}, () => (Math.random() * 16 | 0).toString(16)).join('');
+  }
+
   function buildId(env, resource) {
-    const uuid = uuidv4();
-    if (env && resource) return `C0FFEE1D-${env}-${uuid}`;
-    if (env) return `C0FFEE1D-${env}-${uuid}`;
+    const uuid = uuidv4(); // xxxxxxxx-4xxx-yxxx-xxxxxxxxxxxx
+    const parts = uuid.split('-');
+    // Drop first 8-char segment; use 4xxx-yxxx-xxxxxxxxxxxx tail
+    // so env+2random fills the 4-char slot: C0FFEE1D-{env}{rr}-4xxx-yxxx-xxxxxxxxxxxx
+    const tail = parts.slice(1).join('-');
+    if (env) return `C0FFEE1D-${env}${randHex(2)}-${tail}`;
     return `C0FFEE1D-${uuid}`;
   }
 
@@ -1439,10 +1444,9 @@ $ grep -oE <span class="code-string">'C0FFEE1D-[a-z]+'</span> app.log \
 
   /* ── ANIMATED HERO ID ── */
   const heroIds = [
-    'C0FFEE1D-E3-4f2a-9b1c-d3e8f7a2c501',
-    'C0FFEE1D-E1-4a1b-9c2d-e5f678901234',
-    'C0FFEE1D-E2-4c3d-ae4f-b0c1d2e3f456',
-    'C0FFEE1D-dev-4d5e-bf6a-c2d3e4f5a678',
+    'C0FFEE1D-E3a4-4f2a-b9c7-0a8e65f21034',
+    'C0FFEE1D-E1b2-4a1b-9c2d-e5f678901234',
+    'C0FFEE1D-E2c7-4c3d-ae4f-b0c1d2e3f456',
   ];
   let heroIdx = 0;
   setInterval(() => {
