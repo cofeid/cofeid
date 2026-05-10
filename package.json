@@ -1,0 +1,28 @@
+{
+  "name": "cofeid",
+  "version": "1.2.1",
+  "description": "Generate C0FFEE1D-prefixed UUIDv4 identifiers.",
+  "keywords": ["uuid", "uuidgen", "id", "testid"],
+  "license": "MIT",
+  "type": "commonjs",
+  "main": "index.js",
+  "bin": {
+    "cofeid": "./bin/cofeid"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "index.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "lint": "node -e \"require('./index'); require('./src/cofeid');\"",
+    "pack:dry": "npm pack --dry-run"
+  },
+  "repository": "github:cofeid/cofeid",
+  "engines": {
+    "node": ">=18"
+  }
+}

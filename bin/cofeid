@@ -1,0 +1,112 @@
+#!/usr/bin/env node
+'use strict';
+
+const {
+  COFEID_PREFIX,
+  COFEID_UUID_REGEX,
+  generateUuidV4WithCofeidPrefix,
+  normalizeUuid,
+} = require('../src/cofeid');
+
+function printUsage() {
+  process.stdout.write([
+    'cofeid [uuid] [--e1] [--e2] [--e3] [--e4] [--e5] [--e6]',
+    '',
+    'Examples:',
+    '  cofeid',
+    '  cofeid C0FFEE1D-0000-4000-8000-000000000000',
+    '  cofeid --e1',
+    '  cofeid --e3',
+    '',
+    `The UUID, if provided, must start with ${COFEID_PREFIX}.`,
+  ].join('\n') + '\n');
+}
+
+function randomSuffix(len = 2) {
+  const chars = '0123456789ABCDEF';
+  let out = '';
+  for (let i = 0; i < len; i++) {
+    out += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return out;
+}
+
+function parseArgs(argv) {
+  const positionals = [];
+  const flags = {};
+  let help = false;
+
+  for (const token of argv) {
+    if (token === '--help' || token === '-h') {
+      help = true;
+      continue;
+    }
+
+    if (token === '--e1') { flags.e1 = true; continue; }
+    if (token === '--e2') { flags.e2 = true; continue; }
+    if (token === '--e3') { flags.e3 = true; continue; }
+    if (token === '--e4') { flags.e4 = true; continue; }
+    if (token === '--e5') { flags.e5 = true; continue; }
+    if (token === '--e6') { flags.e6 = true; continue; }
+
+    if (token.startsWith('-')) {
+      throw new Error(`Unknown flag: ${token}`);
+    }
+
+    positionals.push(token);
+  }
+
+  if (positionals.length > 1) {
+    throw new Error(`Unexpected extra arguments: ${positionals.slice(1).join(' ')}`);
+  }
+
+  return { help, uuid: positionals[0], flags };
+}
+
+function applyEnvironmentToUuid(uuid, flags) {
+  const parts = uuid.split('-');
+
+  let env = null;
+
+  if (flags.e1) env = 'E1';
+  else if (flags.e2) env = 'E2';
+  else if (flags.e3) env = 'E3';
+  else if (flags.e4) env = 'E4';
+  else if (flags.e5) env = 'E5';
+  else if (flags.e6) env = 'E6';
+  else env = 'E0';
+
+  const tag = (env + randomSuffix(2)).slice(0, 4);
+
+  parts[1] = tag;
+
+  return parts.join('-');
+}
+
+function main() {
+  try {
+    const { help, uuid, flags } = parseArgs(process.argv.slice(2));
+
+    if (help) {
+      printUsage();
+      process.exit(0);
+    }
+
+    let output = uuid
+      ? normalizeUuid(uuid)
+      : generateUuidV4WithCofeidPrefix();
+
+    output = applyEnvironmentToUuid(output, flags);
+
+    if (!COFEID_UUID_REGEX.test(output)) {
+      throw new Error('Generated UUID failed validation');
+    }
+
+    process.stdout.write(`${output}\n`);
+  } catch (err) {
+    process.stderr.write(`${err instanceof Error ? err.message : String(err)}\n`);
+    process.exitCode = 1;
+  }
+}
+
+main();
